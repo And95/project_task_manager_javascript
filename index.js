@@ -231,12 +231,11 @@ const setTaskTitleMarkup = (taskTitleElement) => {
 /* function to count tasks done */
 const getCountDoneTask = () => {
   const p = document.getElementById("footerCount");
-
   const tasks = getTasksFromLocalStorage();
-
   const doneTasks = tasks.filter((t) => t.checked).length;
+  const totalTasks = tasks.length;
 
-  p.textContent = `${doneTasks} tarefa concluída`;
+  p.textContent = `${totalTasks}/${doneTasks} tarefas concluídas`;
 };
 
 /**************************************************/
