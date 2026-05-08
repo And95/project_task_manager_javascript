@@ -36,7 +36,8 @@ const setTasksInLocalStorage = (tasks) =>
 /* include id */
 const getNewTaskId = () => {
   const tasks = getTasksFromLocalStorage();
-  const lastId = tasks[tasks.length - 1]?.id; // optional chaining
+  const lastId = tasks[tasks.length - 1]?.id;
+
   return lastId ? lastId + 1 : 1;
 };
 
@@ -53,49 +54,77 @@ const clearInputs = () => {
 const renderTask = (task) => {
   const div = document.createElement("div");
   div.className = "task";
+
   div.innerHTML = `
-      <ul>
-        <li>
-          <h2 class="taskTitle">${task.title}</h2>
-        </li>
-        <li class="innerTaskActivityDate">
-          <p class="taskActivity">${task.description}</p>
-          <span class="taskDate">Criado em: ${task.dt_insercao}</span>
-        </li>
-      </ul>
+    <ul>
+      <li>
+        <h2 class="taskTitle">${task.title}</h2>
+      </li>
+
+      <li class="innerTaskActivityDate">
+        <p class="taskActivity">${task.description}</p>
+
+        <span class="taskDate">
+          Criado em: ${task.dt_insercao}
+        </span>
+      </li>
+    </ul>
+
+    <div class="taskActions">
       <button
         class="doneBtn"
-        data-id="${task.id}" ${task.checked ? 'style="display:none;"' : ""}
-        aria-label="Concluir tarefa">
+        data-id="${task.id}"
+        ${task.checked ? 'style="display:none;"' : ""}
+        aria-label="Concluir tarefa"
+      >
         Concluir
       </button>
+
       <img
         src="./assets/checked.svg"
         alt="checked"
         class="checked"
-        ${task.checked ? 'style="display:inline;"' : ""}>
+        ${task.checked ? 'style="display:block;"' : ""}
+      >
+
+      <button
+        class="deleteBtn"
+        data-id="${task.id}"
+        aria-label="Excluir tarefa"
+      >
+        Excluir
+      </button>
+    </div>
   `;
 
-  // Adiciona a div(item) a seção correspondente:
+  // adiciona task na section
   const section = document.querySelectorAll("main section")[1];
   section.appendChild(div);
+
+  // se já estiver concluída
+  if (task.checked) {
+    const title = div.querySelector(".taskTitle");
+    setTaskTitleMarkup(title);
+  }
 };
 
 /**************************************************/
 /* create a new task on the screen */
 const createTask = (event) => {
-  event.preventDefault(); // Impede reload da página!
+  event.preventDefault();
 
   const title = document.getElementById("title").value.trim();
   const activity = document.getElementById("activity").value.trim();
-  const registre = new Date().toLocaleDateString("pt-BR"); // captura data atual
+  const registre = new Date().toLocaleDateString("pt-BR");
 
   if (title && activity) {
-    // 1. Busca as tarefas do localStorage
+    // tarefas salvas
     const tasksLocalStorage = getTasksFromLocalStorage();
+
+    // novo id
     const id = getNewTaskId();
 
-    // 2. Cria nova task
+    // nova task
     const newTask = {
       id: id,
       title: title,
@@ -104,17 +133,17 @@ const createTask = (event) => {
       checked: false,
     };
 
-    // 3. Atualiza localStorage
+    // salva
     const setAllTasks = [...tasksLocalStorage, newTask];
     setTasksInLocalStorage(setAllTasks);
 
-    // 4. Limpa inputs
+    // limpa inputs
     clearInputs();
 
-    // 5. Renderiza apenas a nova task
+    // renderiza
     renderTask(newTask);
 
-    // 6. Atualizar contador
+    // atualiza contador
     getCountDoneTask();
   }
 };
@@ -123,7 +152,9 @@ const createTask = (event) => {
 /* update status in localStorage */
 const setDoneTask = (id) => {
   const tasks = getTasksFromLocalStorage();
+
   const index = tasks.findIndex((task) => task.id === id);
+
   if (index !== -1) {
     tasks[index].checked = true;
     setTasksInLocalStorage(tasks);
@@ -131,67 +162,102 @@ const setDoneTask = (id) => {
 };
 
 /**************************************************/
-/* function to mark the task as completed */
+/* remove task from localStorage */
+const deleteTask = (id) => {
+  const tasks = getTasksFromLocalStorage();
 
+  const updatedTasks = tasks.filter((task) => task.id !== id);
+
+  setTasksInLocalStorage(updatedTasks);
+};
+
+/**************************************************/
+/* click events */
 document.addEventListener("click", (e) => {
+  /******** concluir tarefa ********/
   if (e.target.classList.contains("doneBtn")) {
     const button = e.target;
-    const img = button.nextElementSibling; // pega a imagem que está depois do botão
 
-    button.style.display = "none"; // esconde o botão
-    img.style.display = "inline"; // mostra a imagem
+    const taskActions = button.closest(".taskActions");
 
-    // pega o <h2> do título desta task
+    const img = taskActions.querySelector(".checked");
+
+    // esconde botão
+    button.style.display = "none";
+
+    // mostra check imediatamente
+    img.style.display = "block";
+
+    // pega título
     const taskTitleMarkup = button.closest(".task").querySelector(".taskTitle");
-    // chama a função passando o elemento
+
+    // aplica estilo concluído
     setTaskTitleMarkup(taskTitleMarkup);
 
-    // Atualiza no localStorage que está concluída
+    // atualiza localStorage
     const id = parseInt(button.dataset.id);
+
     setDoneTask(id);
-    getCountDoneTask(); // atualiza contador
+
+    // atualiza contador
+    getCountDoneTask();
+  }
+
+  /******** excluir tarefa ********/
+  if (e.target.classList.contains("deleteBtn")) {
+    const button = e.target;
+
+    const id = parseInt(button.dataset.id);
+
+    // remove localStorage
+    deleteTask(id);
+
+    // remove HTML
+    button.closest(".task").remove();
+
+    // atualiza contador
+    getCountDoneTask();
   }
 });
 
 /**************************************************/
-/* fucntion to markup the title tasks done */
+/* function to markup the title tasks done */
 const setTaskTitleMarkup = (taskTitleElement) => {
   taskTitleElement.style.textDecoration = "line-through";
   taskTitleElement.style.color = "#8F98A8";
 };
 
 /**************************************************/
-/* fucntion to count the task in real time */
-getCountDoneTask = () => {
+/* function to count tasks done */
+const getCountDoneTask = () => {
   const p = document.getElementById("footerCount");
+
   const tasks = getTasksFromLocalStorage();
 
-  //const doneTasks = tasks.reduce((a, b) => (b.status === "pendente" ? a++ : a), 0);
-
   const doneTasks = tasks.filter((t) => t.checked).length;
-  //const totalTasks = tasks.length;
 
   p.textContent = `${doneTasks} tarefa concluída`;
 };
 
 /**************************************************/
 window.onload = () => {
+  // inicia localStorage
   if (getTasksFromLocalStorage().length === 0) {
     setTasksInLocalStorage(tasks_fixed);
   }
 
+  // submit form
   const form = document.querySelector("form");
+
   form.addEventListener("submit", createTask);
 
+  // renderiza tasks
   const tasks = getTasksFromLocalStorage();
-  setTasksInLocalStorage(tasks);
+
   tasks.forEach((task) => {
     renderTask(task);
-    // se a tarefa já está checked, estiliza o título:
-    if (task.checked) {
-      const lastTaskTitle = document.querySelectorAll(".taskTitle");
-      setTaskTitleMarkup(lastTaskTitle[lastTaskTitle.length - 1]);
-    }
   });
+
+  // atualiza contador
   getCountDoneTask();
 };
