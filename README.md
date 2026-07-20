@@ -1,9 +1,17 @@
-# project_task_manager_javascript
+# Project Task Manager
 
-Reference: RID195499_desafio03
+Task manager developed with Vanilla JavaScript.
 
-Project Gerenciador de Tarefas
+## 🚀 Live Demo
 
-Link: https://pj-taskmanagerjsbyag.netlify.app
+https://pj-taskmanagerjsbyag.netlify.app
 
-Obs.: Para fins demonstrativos(netlify.com).
+## 🛠️ Technologies
+
+- HTML5
+- CSS3
+- JavaScript
+
+## 👨‍💻 Author
+
+André Gonzaga
